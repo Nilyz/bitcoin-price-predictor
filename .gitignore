@@ -34,3 +34,39 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+    # Entorno virtual
+venv/
+ENV/
+env/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Data files
+data/*.csv
+data/*.xlsx
+
+# Logs
+*.log
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+
+# Node.js / front-end
+node_modules/
+.next/
+dist/
+build/
+
+# Operating system
+.DS_Store
+Thumbs.db
