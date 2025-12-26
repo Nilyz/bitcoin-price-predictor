@@ -8,31 +8,31 @@ import requests
 import pandas as pd
 
 
-# 1. Inicializar la App
+# 1. Initialize the App
 app = FastAPI(title="Bitcoin Price Predictor API", version="1.0")
 
-# Permitir que el frontend hable con el backend
+# Allow frontend to communicate with backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En producción se pone el dominio real
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# 2. Cargar el modelo al inicio
+    # 2. Load the model at startup
 current_dir = os.path.dirname(os.path.abspath(__file__))
 model_path = os.path.join(current_dir, "bitcoin_model.pkl")
 
 try:
     model = joblib.load(model_path)
-    print(f"Modelo cargado correctamente desde: {model_path}")
+    print(f"Model loaded successfully from: {model_path}")
 except Exception as e:
-    print(f"Error al cargar el modelo: {e}")
+    print(f"Error loading model: {e}")
     model = None
 
 
-# 3. Definir la estructura de los datos de entrada
+# 3. Define the structure of input data
 class BitcoinFeatures(BaseModel):
     sma_7: float
     sma_30: float
@@ -53,34 +53,36 @@ def predict_price(features: BitcoinFeatures):
         raise HTTPException(status_code=500, detail="Model not loaded")
 
     try:
-        # 1. Convertir datos de entrada a diccionario
         data_dict = features.dict()
-
-        # 2. Convertir a DataFrame
         input_data = pd.DataFrame([data_dict])
-
-        # Definir el orden usado en ml_model.py
-        correct_order = [
-            "sma_7",
-            "sma_30",
-            "rsi",
-            "price_lag_1",
-            "price_lag_7",
-            "volatility",
-        ]
-
+        
+        correct_order = ["sma_7", "sma_30", "rsi", "price_lag_1", "price_lag_7", "volatility"]
         input_data = input_data[correct_order]
+        
+        base_prediction = model.predict(input_data)[0]
+        
+        adjustment = 0
+        
+        # RSI Logic (If it's very high, the price tends to fall)
+        if features.rsi > 60:
+            factor = (features.rsi - 60) / 100
+            adjustment = -(base_prediction * factor * 0.05)
+        elif features.rsi < 40:
+            factor = (40 - features.rsi) / 100
+            adjustment = (base_prediction * factor * 0.05) 
 
-        # 5. Predecir
-        prediction = model.predict(input_data)
+        # Volatility Logic (Amplifies the movement)
+        vol_factor = 1 + (features.volatility / 10000)
+        
+        final_prediction = (base_prediction + adjustment) * vol_factor
 
-        return {"predicted_price": float(prediction[0]), "currency": "USD"}
+        return {"predicted_price": float(final_prediction), "currency": "USD"}
+
     except Exception as e:
         print(f"ERROR: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
-# --- FUNCIÓN PARA CALCULAR INDICADORES EN TIEMPO REAL ---
+# --- FUNCTION TO CALCULATE REAL-TIME INDICATORS ---
 def get_latest_bitcoin_data():
     url = "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart"
     params = {
@@ -95,7 +97,6 @@ def get_latest_bitcoin_data():
     df = pd.DataFrame(prices, columns=["timestamp", "price"])
     df["date"] = pd.to_datetime(df["timestamp"], unit="ms")
 
-    # Calcular indicadores
     df["sma_7"] = df["price"].rolling(window=7).mean()
     df["sma_30"] = df["price"].rolling(window=30).mean()
 
@@ -106,12 +107,10 @@ def get_latest_bitcoin_data():
     rs = gain / loss
     df["rsi"] = 100 - (100 / (1 + rs))
 
-    # Volatility & Lags
     df["volatility"] = df["price"].rolling(window=7).std()
     df["price_lag_1"] = df["price"].shift(1)
     df["price_lag_7"] = df["price"].shift(7)
 
-    # Devolvemos la ÚLTIMA fila (los datos de HOY)
     latest = df.iloc[-1]
 
     return {
@@ -134,5 +133,5 @@ def get_current_data():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Para correr el servidor:
+# To run the server:
 # uvicorn backend.main:app --reload

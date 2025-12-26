@@ -41,10 +41,13 @@ export default function RunningTrades({ history }: RunningTradesProps) {
                                 index === 0 ? "text-white" : "text-gray-300"
                             }`}
                         >
-                            {item.price.toFixed(2)}
+                            {item.price.toLocaleString("en-US", {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            })}
                         </span>
                         <span className="text-right text-cyan-500/70">
-                            {item.volume}
+                            {item.volume.toLocaleString("en-US")}
                         </span>
                     </div>
                 ))}

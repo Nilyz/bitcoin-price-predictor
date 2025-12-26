@@ -17,7 +17,7 @@ export default function ControlPanel({
                 <div className="flex items-center gap-2 text-cyan-400">
                     <Sliders size={18} />
                     <h3 className="font-bold text-sm uppercase">
-                        Simular Escenarios
+                        Simulate Scenarios
                     </h3>
                 </div>
                 <span className="text-[10px] text-gray-500 border border-gray-700 px-2 py-1 rounded">
@@ -26,6 +26,7 @@ export default function ControlPanel({
             </div>
 
             <div className="space-y-6">
+                {/* RSI SLIDER */}
                 <div>
                     <div className="flex justify-between mb-2">
                         <label className="text-[10px] text-gray-400 font-bold uppercase">
@@ -56,10 +57,11 @@ export default function ControlPanel({
                     </div>
                 </div>
 
+                {/* VOLATILITY SLIDER */}
                 <div>
                     <div className="flex justify-between mb-2">
                         <label className="text-[10px] text-gray-400 font-bold uppercase">
-                            Volatilidad (Riesgo)
+                            Volatility (Risk)
                         </label>
                         <span className="text-xs font-mono text-white">
                             {features.volatility.toFixed(0)}
@@ -76,10 +78,11 @@ export default function ControlPanel({
                     />
                 </div>
 
+                {/* NUMERIC INPUTS */}
                 <div className="grid grid-cols-2 gap-3">
                     <div className="bg-[#0E0E12] p-2 rounded border border-gray-800">
                         <label className="text-[10px] text-gray-500 block mb-1">
-                            Promedio Semanal
+                            Weekly Avg (SMA 7)
                         </label>
                         <input
                             type="number"
@@ -91,7 +94,7 @@ export default function ControlPanel({
                     </div>
                     <div className="bg-[#0E0E12] p-2 rounded border border-gray-800">
                         <label className="text-[10px] text-gray-500 block mb-1">
-                            Precio de Ayer
+                            Yesterday Price
                         </label>
                         <input
                             type="number"
@@ -107,7 +110,7 @@ export default function ControlPanel({
                     onClick={onPredict}
                     className="w-full mt-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-cyan-900/20 transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
-                    <Zap size={18} fill="currentColor" /> EJECUTAR ESCENARIO
+                    <Zap size={18} fill="currentColor" /> RUN SCENARIO
                 </button>
             </div>
         </div>

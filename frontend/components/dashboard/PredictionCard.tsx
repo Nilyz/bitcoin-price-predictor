@@ -35,7 +35,7 @@ export default function PredictionCard({
                     <div className="flex flex-col items-center text-gray-600">
                         <Sliders size={32} className="mb-2 opacity-50" />
                         <p className="text-sm">
-                            Ajusta los sliders y ejecuta para ver el impacto.
+                            Adjust the sliders and run to see the impact.
                         </p>
                     </div>
                 ) : (
@@ -43,12 +43,13 @@ export default function PredictionCard({
                         <div className="flex justify-between items-start">
                             <div>
                                 <p className="text-xs text-purple-400 font-bold uppercase mb-1">
-                                    Proyección de IA
+                                    AI Projection
                                 </p>
                                 <h2 className="text-5xl font-bold text-white mb-2">
                                     $
-                                    {prediction.toLocaleString(undefined, {
-                                        maximumFractionDigits: 0,
+                                    {prediction.toLocaleString("en-US", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
                                     })}
                                 </h2>
                                 <div className="flex gap-2">
@@ -73,7 +74,7 @@ export default function PredictionCard({
                                 }`}
                             >
                                 <span className="text-[10px] font-bold uppercase text-gray-400 mb-1">
-                                    Señal Sugerida
+                                    Signal
                                 </span>
                                 <span
                                     className={`text-xl font-black ${
@@ -96,24 +97,24 @@ export default function PredictionCard({
                             />
                             <p className="text-xs text-gray-400 leading-relaxed">
                                 <span className="text-white font-bold">
-                                    Análisis:
+                                    Insights:
                                 </span>{" "}
-                                Con un RSI de{" "}
+                                With an RSI of{" "}
                                 <span className="text-white">
                                     {features.rsi.toFixed(2)}
                                 </span>{" "}
-                                y volatilidad de{" "}
-                                {features.volatility.toFixed(2)}, el modelo
-                                predice una{" "}
+                                and volatility of{" "}
+                                {features.volatility.toFixed(2)}, the model
+                                predicts a{" "}
                                 {prediction > currentPrice
-                                    ? "recuperación alcista"
-                                    : "corrección bajista"}
+                                    ? "bullish recovery"
+                                    : "bearish correction"}
                                 .
                                 {features.rsi > 70
-                                    ? " Precaución: El mercado está sobrecomprado."
+                                    ? " Caution: The market is overbought."
                                     : ""}
                                 {features.rsi < 30
-                                    ? " Oportunidad: El mercado está sobrevendido."
+                                    ? " Opportunity: The market is oversold."
                                     : ""}
                             </p>
                         </div>
@@ -125,7 +126,7 @@ export default function PredictionCard({
             {prediction !== null && (
                 <div className="bg-[#15151A] border border-gray-800 rounded-2xl p-4 h-[180px]">
                     <p className="text-[10px] text-gray-500 uppercase font-bold mb-2">
-                        Proyección Visual
+                        Visual Projection
                     </p>
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={forecastHistory}>
@@ -160,7 +161,7 @@ export default function PredictionCard({
                                 tick={{ fontSize: 10 }}
                             />
                             <YAxis
-                                domain={["dataMin", "dataMax"]}
+                                domain={["auto", "auto"]}
                                 orientation="right"
                                 stroke="#52525b"
                                 tick={{ fontSize: 10 }}

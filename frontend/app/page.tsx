@@ -9,12 +9,7 @@ import PredictionCard from "@/components/dashboard/PredictionCard";
 export default function Home() {
     // --- STATES ---
     const [features, setFeatures] = useState({
-        sma_7: 0,
-        sma_30: 0,
-        rsi: 50,
-        price_lag_1: 0,
-        price_lag_7: 0,
-        volatility: 0,
+        sma_7: 0, sma_30: 0, rsi: 50, price_lag_1: 0, price_lag_7: 0, volatility: 0,
     });
 
     const [prediction, setPrediction] = useState<number | null>(null);
@@ -25,42 +20,40 @@ export default function Home() {
     const [liveHistory, setLiveHistory] = useState<any[]>([]);
     const [forecastHistory, setForecastHistory] = useState<any[]>([]);
 
-    // --- DATA LOGIC ---
+    // --- DATA LOGIC  ---
     const fetchRealData = async () => {
         try {
-            // MOCK DATA
-            const mockData = {
-                sma_7: 42000,
-                sma_30: 41000,
-                rsi: 55.43,
-                price_lag_1: 43100,
-                price_lag_7: 42500,
-                volatility: 120.5,
-                current_price: 43250.75,
-            };
+            // 1. Connect to Backend 
+            const res = await fetch("http://127.0.0.1:8000/current-data");
+            
+            if (!res.ok) throw new Error("Backend disconnected");
+
+            const data = await res.json();
 
             setFeatures({
-                sma_7: mockData.sma_7,
-                sma_30: mockData.sma_30,
-                rsi: mockData.rsi,
-                price_lag_1: mockData.price_lag_1,
-                price_lag_7: mockData.price_lag_7,
-                volatility: mockData.volatility,
+                sma_7: data.sma_7,
+                sma_30: data.sma_30,
+                rsi: data.rsi,
+                price_lag_1: data.price_lag_1,
+                price_lag_7: data.price_lag_7,
+                volatility: data.volatility,
             });
-            setCurrentPrice(mockData.current_price);
+            setCurrentPrice(data.current_price);
 
+            // Create initial history with data consistent with the current price
             setLiveHistory([
-                { time: "10:00", price: mockData.price_lag_7, volume: 1200 },
-                {
-                    time: "12:00",
-                    price: (mockData.price_lag_7 + mockData.price_lag_1) / 2,
-                    volume: 2100,
-                },
-                { time: "14:00", price: mockData.price_lag_1, volume: 1800 },
-                { time: "Now", price: mockData.current_price, volume: 3200 },
+                { time: "10:00", price: data.price_lag_7, volume: 1200 },
+                { time: "12:00", price: (data.price_lag_7 + data.price_lag_1) / 2, volume: 2100 },
+                { time: "14:00", price: data.price_lag_1, volume: 1800 },
+                { time: "Now", price: data.current_price, volume: 3200 },
             ]);
         } catch (e) {
-            console.error(e);
+            console.error("Error fetching data:", e);
+            // Realistic fallback if backend fails (Approximate today's price)
+            const fallbackPrice = 87500.00;
+            setCurrentPrice(fallbackPrice);
+            setFeatures(prev => ({...prev, price_lag_1: fallbackPrice})); 
+            setLiveHistory([{ time: "Now", price: fallbackPrice, volume: 0 }]);
         }
     };
 
@@ -71,7 +64,7 @@ export default function Home() {
         });
     };
 
-    // --- SIMULATION ---
+    // --- SIMULATION VISUAL ---
     useEffect(() => {
         let interval: NodeJS.Timeout;
         if (isLive && currentPrice > 0) {
@@ -85,10 +78,7 @@ export default function Home() {
 
                 setLiveHistory((prev) => {
                     const newPoint = {
-                        time: new Date().toLocaleTimeString([], {
-                            minute: "2-digit",
-                            second: "2-digit",
-                        }),
+                        time: new Date().toLocaleTimeString([], { minute: "2-digit", second: "2-digit" }),
                         price: newPrice,
                         volume: newVol,
                     };
@@ -101,39 +91,42 @@ export default function Home() {
         return () => clearInterval(interval);
     }, [isLive, currentPrice]);
 
+    // --- PREDICTION (CONNECTED TO BACKEND) ---
     const handlePredict = async () => {
         try {
+            console.log("Sending scenario to Backend...");
+            
+            // Send features + current price lagged to backend
             const inputData = { ...features, price_lag_1: currentPrice };
+            
             const response = await fetch("http://127.0.0.1:8000/predict", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(inputData),
             });
-            const data = await response.json();
-            setPrediction(data.predicted_price);
 
-            const lastPoints = liveHistory.slice(-3);
+            if (!response.ok) throw new Error("Error in prediction");
+
+            const data = await response.json();
+            const newPrediction = data.predicted_price;
+
+            setPrediction(newPrediction);
+
+            let baselinePoints = [];
+            if (liveHistory.length > 0) {
+                baselinePoints = liveHistory.slice(-3).map((p) => ({ ...p, type: "history" }));
+            } else {
+                baselinePoints = [{ time: "Now", price: currentPrice, type: "history" }];
+            }
+
             setForecastHistory([
-                ...lastPoints.map((p) => ({ ...p, type: "history" })),
-                {
-                    time: "SCENARIO",
-                    price: data.predicted_price,
-                    type: "prediction",
-                },
+                ...baselinePoints,
+                { time: "SCENARIO", price: newPrediction, type: "prediction" },
             ]);
+
         } catch (err) {
-                  // Fallback if no backend
-            const dummyPrediction = currentPrice * 1.02;
-            setPrediction(dummyPrediction);
-            const lastPoints = liveHistory.slice(-3);
-            setForecastHistory([
-                ...lastPoints.map((p) => ({ ...p, type: "history" })),
-                {
-                    time: "SCENARIO",
-                    price: dummyPrediction,
-                    type: "prediction",
-                },
-            ]);
+            console.error(err);
+            alert("Error: Make sure the backend (main.py) is running.");
         }
     };
 

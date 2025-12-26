@@ -27,13 +27,14 @@ export default function LiveMarketTicker({
             <div className="flex justify-between items-end mb-4 px-2">
                 <div>
                     <h2 className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">
-                        Precio Actual
+                        Current Price
                     </h2>
                     <div className="flex items-center gap-4">
                         <span className="text-6xl font-bold tracking-tighter text-white">
                             $
                             {currentPrice.toLocaleString("en-US", {
                                 minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
                             })}
                         </span>
                         {isLive && (
@@ -93,10 +94,14 @@ export default function LiveMarketTicker({
                                 orientation="right"
                                 stroke="#52525b"
                                 tick={{ fontSize: 10 }}
-                                tickFormatter={(v) => `$${v}`}
+                                tickFormatter={(v) =>
+                                    `$${v.toLocaleString("en-US", {
+                                        maximumFractionDigits: 0,
+                                    })}`
+                                }
                                 axisLine={false}
                                 tickLine={false}
-                                width={50}
+                                width={60}
                             />
                             <Tooltip
                                 contentStyle={{
@@ -104,6 +109,13 @@ export default function LiveMarketTicker({
                                     borderColor: "#27272a",
                                     color: "#fff",
                                 }}
+                                formatter={(value: number) => [
+                                    `$${value.toLocaleString("en-US", {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2,
+                                    })}`,
+                                    "Price",
+                                ]}
                             />
                             <Area
                                 type="monotone"
