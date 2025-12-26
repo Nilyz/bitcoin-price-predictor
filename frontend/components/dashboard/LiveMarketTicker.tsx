@@ -109,8 +109,8 @@ export default function LiveMarketTicker({
                                     borderColor: "#27272a",
                                     color: "#fff",
                                 }}
-                                formatter={(value: number) => [
-                                    `$${value.toLocaleString("en-US", {
+                                formatter={(value: any) => [
+                                    `$${Number(value).toLocaleString("en-US", {
                                         minimumFractionDigits: 2,
                                         maximumFractionDigits: 2,
                                     })}`,
