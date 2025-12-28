@@ -1,4 +1,5 @@
 import { Bitcoin, Activity, Wallet } from "lucide-react";
+import Image from "next/image";
 
 interface SidebarProps {
     investment: number;
@@ -23,13 +24,20 @@ export default function Sidebar({
     return (
         <aside className="w-20 lg:w-64 border-r border-gray-800 flex flex-col justify-between p-4 hidden md:flex bg-[#0E0E12]">
             <div>
-                <div className="flex items-center gap-3 mb-10 px-2 mt-2">
-                    <div className="w-8 h-8 bg-cyan-500 rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.4)]">
-                        <Bitcoin className="text-black w-5 h-5" />
+                <div className="mb-10 px-4 flex items-center gap-3">
+                    <div className="relative w-10 h-10">
+                        {" "}
+                        <Image
+                            src="/Tradecore_logo.png"
+                            alt="TradeCore Logo"
+                            fill
+                            className="object-contain"
+                        />
                     </div>
-                    <span className="font-bold text-xl tracking-tight hidden lg:block">
+
+                    <h1 className="text-2xl font-bold tracking-tighter text-white">
                         TradeCore
-                    </span>
+                    </h1>
                 </div>
                 <nav className="space-y-2">
                     <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-[#1C1C24] text-cyan-400 border border-gray-800">

@@ -155,7 +155,7 @@ export default function Home() {
                 currentPrice={currentPrice}
             />
 
-            <main className="flex-1 flex flex-col h-screen overflow-y-auto">
+            <main className="flex-1 flex flex-col h-screen overflow-y-auto overflow-x-hidden">
                 <Header
                     isLive={isLive}
                     setIsLive={setIsLive}

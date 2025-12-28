@@ -12,7 +12,10 @@ export default function ControlPanel({
     onPredict,
 }: ControlPanelProps) {
     return (
-        <div className="lg:col-span-5 bg-[#15151A] border border-gray-800 rounded-2xl p-6 h-full">
+        // 1. Contenedor principal con flex-col y h-full
+        <div className="lg:col-span-5 bg-[#15151A] border border-gray-800 rounded-2xl p-6 h-full flex flex-col">
+            
+            {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2 text-cyan-400">
                     <Sliders size={18} />
@@ -25,6 +28,7 @@ export default function ControlPanel({
                 </span>
             </div>
 
+            {/* 2. Este div agrupa SOLO los inputs y sliders */}
             <div className="space-y-6">
                 {/* RSI SLIDER */}
                 <div>
@@ -32,13 +36,7 @@ export default function ControlPanel({
                         <label className="text-[10px] text-gray-400 font-bold uppercase">
                             RSI (Momentum)
                         </label>
-                        <span
-                            className={`text-xs font-mono font-bold ${
-                                features.rsi > 70
-                                    ? "text-red-400"
-                                    : "text-green-400"
-                            }`}
-                        >
+                        <span className={`text-xs font-mono font-bold ${features.rsi > 70 ? "text-red-400" : "text-green-400"}`}>
                             {features.rsi.toFixed(0)}
                         </span>
                     </div>
@@ -82,7 +80,7 @@ export default function ControlPanel({
                 <div className="grid grid-cols-2 gap-3">
                     <div className="bg-[#0E0E12] p-2 rounded border border-gray-800">
                         <label className="text-[10px] text-gray-500 block mb-1">
-                            Weekly Avg (SMA 7)
+                            Weekly Average
                         </label>
                         <input
                             type="number"
@@ -105,14 +103,17 @@ export default function ControlPanel({
                         />
                     </div>
                 </div>
+            </div> 
+            {/* 3. ¡IMPORTANTE! Cerramos el div de inputs AQUÍ, antes del botón */}
 
-                <button
-                    onClick={onPredict}
-                    className="w-full mt-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-cyan-900/20 transition-all active:scale-95 flex items-center justify-center gap-2"
-                >
-                    <Zap size={18} fill="currentColor" /> RUN SCENARIO
-                </button>
-            </div>
+            {/* 4. Ahora el botón es hijo directo del flex container principal y mt-auto funcionará */}
+            <button
+                onClick={onPredict}
+                className="mt-auto w-full bg-cyan-500/10 border border-cyan-500/50 hover:bg-cyan-500/20 text-cyan-400 font-mono font-bold py-3 rounded-lg flex items-center justify-center gap-2 uppercase text-xs transition-all cursor-pointer"
+            >
+                <Zap size={16} className="group-hover:text-cyan-200 transition-colors" />
+                Run Simulation
+            </button>
         </div>
     );
 }
