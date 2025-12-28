@@ -24,13 +24,13 @@ export default function LiveMarketTicker({
 }: LiveMarketTickerProps) {
     return (
         <section className="w-full">
-            <div className="flex justify-between items-end mb-4 px-2">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-4 gap-4">
                 <div>
                     <h2 className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-1">
                         Current Price
                     </h2>
-                    <div className="flex items-center gap-4">
-                        <span className="text-6xl font-bold tracking-tighter text-white">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                        <span className="text-4xl sm:text-6xl font-bold tracking-tighter text-white">
                             $
                             {currentPrice.toLocaleString("en-US", {
                                 minimumFractionDigits: 2,
@@ -39,7 +39,7 @@ export default function LiveMarketTicker({
                         </span>
                         {isLive && (
                             <span
-                                className={`text-sm px-2 py-1 rounded ${
+                                className={`text-xs sm:text-sm px-2 py-1 rounded ${
                                     trend === "up"
                                         ? "text-green-400 bg-green-500/10"
                                         : "text-red-400 bg-red-500/10"
@@ -52,9 +52,9 @@ export default function LiveMarketTicker({
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 h-[280px]">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
                 {/* GRAPH */}
-                <div className="lg:col-span-3 bg-[#15151A] rounded-2xl border border-gray-800 p-4 relative overflow-hidden h-full">
+                <div className="lg:col-span-3 bg-[#15151A] rounded-2xl border border-gray-800 p-4 relative overflow-hidden h-64 sm:h-72 md:h-80 lg:h-[280px]">
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={history}>
                             <defs>
@@ -129,8 +129,9 @@ export default function LiveMarketTicker({
                     </ResponsiveContainer>
                 </div>
 
-                {/* COMPONENT RUNNING TRADES */}
-                <RunningTrades history={history} />
+                <div className="lg:col-span-1 overflow-y-auto h-64 sm:h-72 md:h-80 lg:h-[280px]">
+                    <RunningTrades history={history} />
+                </div>
             </div>
         </section>
     );
