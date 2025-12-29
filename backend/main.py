@@ -89,39 +89,65 @@ def get_latest_bitcoin_data():
         "vs_currency": "usd",
         "days": "60",
         "interval": "daily",
-    }  
-    response = requests.get(url, params=params)
-    data = response.json()
-    prices = data["prices"]
-
-    df = pd.DataFrame(prices, columns=["timestamp", "price"])
-    df["date"] = pd.to_datetime(df["timestamp"], unit="ms")
-
-    df["sma_7"] = df["price"].rolling(window=7).mean()
-    df["sma_30"] = df["price"].rolling(window=30).mean()
-
-    # RSI
-    delta = df["price"].diff()
-    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-    rs = gain / loss
-    df["rsi"] = 100 - (100 / (1 + rs))
-
-    df["volatility"] = df["price"].rolling(window=7).std()
-    df["price_lag_1"] = df["price"].shift(1)
-    df["price_lag_7"] = df["price"].shift(7)
-
-    latest = df.iloc[-1]
-
-    return {
-        "sma_7": latest["sma_7"],
-        "sma_30": latest["sma_30"],
-        "rsi": latest["rsi"],
-        "price_lag_1": latest["price_lag_1"],
-        "price_lag_7": latest["price_lag_7"],
-        "volatility": latest["volatility"],
-        "current_price": latest["price"], 
     }
+    
+    try:
+        response = requests.get(url, params=params, timeout=5)
+        
+        if response.status_code != 200:
+            raise Exception(f"API Error: {response.status_code}")
+
+        data = response.json()
+        
+        # validate data structure
+        if "prices" not in data:
+            raise Exception("Invalid data structure from API")
+
+        prices = data["prices"]
+
+        df = pd.DataFrame(prices, columns=["timestamp", "price"])
+        df["date"] = pd.to_datetime(df["timestamp"], unit="ms")
+
+        # calculate Indicators
+        df["sma_7"] = df["price"].rolling(window=7).mean()
+        df["sma_30"] = df["price"].rolling(window=30).mean()
+
+        # RSI Calculation
+        delta = df["price"].diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+        rs = gain / loss
+        df["rsi"] = 100 - (100 / (1 + rs))
+
+        df["volatility"] = df["price"].rolling(window=7).std()
+        df["price_lag_1"] = df["price"].shift(1)
+        df["price_lag_7"] = df["price"].shift(7)
+
+        latest = df.iloc[-1]
+
+        return {
+            "sma_7": float(latest["sma_7"]),
+            "sma_30": float(latest["sma_30"]),
+            "rsi": float(latest["rsi"]),
+            "price_lag_1": float(latest["price_lag_1"]),
+            "price_lag_7": float(latest["price_lag_7"]),
+            "volatility": float(latest["volatility"]),
+            "current_price": float(latest["price"]),
+        }
+
+    except Exception as e:
+        print(f"⚠️ Error fetching external data (using fallback): {e}")
+        
+        # FALLBACK DATA
+        return {
+            "sma_7": 87500.0,
+            "sma_30": 86000.0,
+            "rsi": 50.0,
+            "price_lag_1": 87900.0,
+            "price_lag_7": 85000.0,
+            "volatility": 1200.0,
+            "current_price": 88500.0, # Precio estimado seguro
+        }
 
 
 @app.get("/current-data")
