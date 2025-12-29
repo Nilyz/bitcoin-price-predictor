@@ -2,7 +2,7 @@
 TradeCore AI is an end-to-end full-stack application that predicts Bitcoin prices using Machine Learning and simulates a live trading environment with real-time scenario analysis.
 
 ## Preview
-![TradeCore Preview](./assets/preview.png "TradeCore Dashboard")
+![TradeCore Preview](./assets/tradecore_preview.png "TradeCore Dashboard")
 
 ## About
 TradeCore AI bridges the gap between static Data Science notebooks and reactive web applications. Unlike traditional dashboards that rely solely on expensive WebSocket feeds, TradeCore implements a **Hybrid Architecture** to deliver a "tick-by-tick" experience using resource-efficient methods.
