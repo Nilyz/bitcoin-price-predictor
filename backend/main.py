@@ -6,8 +6,7 @@ import pandas as pd
 import os
 from fastapi.middleware.cors import CORSMiddleware
 import requests
-import pandas as pd
-
+import time
 
 # 1. Initialize the App
 app = FastAPI(title="Bitcoin Price Predictor API", version="1.0")
@@ -31,8 +30,6 @@ app.add_middleware(
 EXPECTED_MODEL_HASH = "5BB4D63F24CFAE6675FDD7746D8FE5B82F344924BB2C26E11495A5F7650A473B"
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
-model_path = os.path.join(current_dir, "bitcoin_model.pkl")
-
 model_path = os.path.join(current_dir, "bitcoin_model.pkl")
 
 
@@ -64,6 +61,12 @@ class BitcoinFeatures(BaseModel):
     price_lag_1: float
     price_lag_7: float
     volatility: float
+
+
+# --- CACHE GLOBAL VARIABLES ---
+CACHE_DATA = None
+LAST_FETCH_TIME = 0
+CACHE_DURATION = 300
 
 
 @app.get("/")
@@ -110,12 +113,19 @@ def predict_price(features: BitcoinFeatures):
         return {"predicted_price": float(final_prediction), "currency": "USD"}
 
     except Exception as e:
-        print(f"ERROR: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"ERROR PREDICTING: {e}") 
+        raise HTTPException(status_code=500, detail="Internal Server Error processing prediction")
 
 
 # --- FUNCTION TO CALCULATE REAL-TIME INDICATORS ---
 def get_latest_bitcoin_data():
+    global CACHE_DATA, LAST_FETCH_TIME
+
+    current_time = time.time()
+    
+    if CACHE_DATA and (current_time - LAST_FETCH_TIME < CACHE_DURATION):
+        return CACHE_DATA
+    
     url = "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart"
     params = {
         "vs_currency": "usd",
@@ -178,7 +188,7 @@ def get_latest_bitcoin_data():
             "price_lag_1": 87900.0,
             "price_lag_7": 85000.0,
             "volatility": 1200.0,
-            "current_price": 88500.0,  # Precio estimado seguro
+            "current_price": 88500.0,
         }
 
 
