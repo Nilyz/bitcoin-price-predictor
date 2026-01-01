@@ -11,10 +11,16 @@ import pandas as pd
 # 1. Initialize the App
 app = FastAPI(title="Bitcoin Price Predictor API", version="1.0")
 
+origins = [
+    "http://localhost:3000",             
+    "https://tradecore-ai.vercel.app",   
+    "https://tradecore-ai.vercel.app/"  
+]
+
 # Allow frontend to communicate with backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=origins, 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
