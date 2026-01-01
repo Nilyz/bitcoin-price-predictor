@@ -1,3 +1,4 @@
+import hashlib
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import joblib
@@ -12,27 +13,44 @@ import pandas as pd
 app = FastAPI(title="Bitcoin Price Predictor API", version="1.0")
 
 origins = [
-    "http://localhost:3000",             
-    "https://tradecore-ai.vercel.app",   
-    "https://tradecore-ai.vercel.app/"  
+    "http://localhost:3000",
+    "https://tradecore-ai.vercel.app",
+    "https://tradecore-ai.vercel.app/",
 ]
 
 # Allow frontend to communicate with backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins, 
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-    # 2. Load the model at startup
+# 2. Load the model at startup
+EXPECTED_MODEL_HASH = "5BB4D63F24CFAE6675FDD7746D8FE5B82F344924BB2C26E11495A5F7650A473B"
+
 current_dir = os.path.dirname(os.path.abspath(__file__))
 model_path = os.path.join(current_dir, "bitcoin_model.pkl")
 
+model_path = os.path.join(current_dir, "bitcoin_model.pkl")
+
+
+def verify_file_hash(file_path, expected_hash):
+    sha256_hash = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for byte_block in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(byte_block)
+    return sha256_hash.hexdigest() == expected_hash
+
+
 try:
-    model = joblib.load(model_path)
-    print(f"Model loaded successfully from: {model_path}")
+    if verify_file_hash(model_path, EXPECTED_MODEL_HASH):
+        model = joblib.load(model_path)
+        print(f"Model verified and loaded successfully.")
+    else:
+        print(f"SECURITY ALERT: Model file hash mismatch! Loading aborted.")
+        model = None
 except Exception as e:
     print(f"Error loading model: {e}")
     model = None
@@ -61,25 +79,32 @@ def predict_price(features: BitcoinFeatures):
     try:
         data_dict = features.dict()
         input_data = pd.DataFrame([data_dict])
-        
-        correct_order = ["sma_7", "sma_30", "rsi", "price_lag_1", "price_lag_7", "volatility"]
+
+        correct_order = [
+            "sma_7",
+            "sma_30",
+            "rsi",
+            "price_lag_1",
+            "price_lag_7",
+            "volatility",
+        ]
         input_data = input_data[correct_order]
-        
+
         base_prediction = model.predict(input_data)[0]
-        
+
         adjustment = 0
-        
+
         # RSI Logic (If it's very high, the price tends to fall)
         if features.rsi > 60:
             factor = (features.rsi - 60) / 100
             adjustment = -(base_prediction * factor * 0.05)
         elif features.rsi < 40:
             factor = (40 - features.rsi) / 100
-            adjustment = (base_prediction * factor * 0.05) 
+            adjustment = base_prediction * factor * 0.05
 
         # Volatility Logic (Amplifies the movement)
         vol_factor = 1 + (features.volatility / 10000)
-        
+
         final_prediction = (base_prediction + adjustment) * vol_factor
 
         return {"predicted_price": float(final_prediction), "currency": "USD"}
@@ -87,6 +112,7 @@ def predict_price(features: BitcoinFeatures):
     except Exception as e:
         print(f"ERROR: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 # --- FUNCTION TO CALCULATE REAL-TIME INDICATORS ---
 def get_latest_bitcoin_data():
@@ -96,15 +122,15 @@ def get_latest_bitcoin_data():
         "days": "60",
         "interval": "daily",
     }
-    
+
     try:
         response = requests.get(url, params=params, timeout=5)
-        
+
         if response.status_code != 200:
             raise Exception(f"API Error: {response.status_code}")
 
         data = response.json()
-        
+
         # validate data structure
         if "prices" not in data:
             raise Exception("Invalid data structure from API")
@@ -143,7 +169,7 @@ def get_latest_bitcoin_data():
 
     except Exception as e:
         print(f"⚠️ Error fetching external data (using fallback): {e}")
-        
+
         # FALLBACK DATA
         return {
             "sma_7": 87500.0,
@@ -152,7 +178,7 @@ def get_latest_bitcoin_data():
             "price_lag_1": 87900.0,
             "price_lag_7": 85000.0,
             "volatility": 1200.0,
-            "current_price": 88500.0, # Precio estimado seguro
+            "current_price": 88500.0,  # Precio estimado seguro
         }
 
 
